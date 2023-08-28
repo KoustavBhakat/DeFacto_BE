@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private String[] endpoints = new String[] { "/login"};
+	private String[] endpoints = new String[] {"/sign-in/**"};
 	
 	@Autowired
 	private UserDetailsService myUserDetailsService;
