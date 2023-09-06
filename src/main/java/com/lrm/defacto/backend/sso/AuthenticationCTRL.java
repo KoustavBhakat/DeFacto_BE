@@ -26,8 +26,7 @@ public class AuthenticationCTRL {
 	private AuthenticationSERV authServ;
 
 	@PostMapping("/google")
-	public ResponseEntity<?> googleSignIn(@RequestBody HashMap<String, Object> data)
-			throws GeneralSecurityException, IOException {
+	public ResponseEntity<?> googleSignIn(@RequestBody HashMap<String, Object> data) {
 
 		try {
 			return new ResponseEntity<>(new Response<>(SuccessStatuses.SIGNED_IN_SUCCESSFULLY,

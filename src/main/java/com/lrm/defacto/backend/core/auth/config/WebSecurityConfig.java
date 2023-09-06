@@ -19,13 +19,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private String[] endpoints = new String[] {"/sign-in/**"};
-	
+
 	@Autowired
 	private UserDetailsService myUserDetailsService;
 
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter;
-
 
 	@Bean
 	public UserDetailsService userDetailsService() {
@@ -63,7 +62,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity httpSecurity) throws Exception {
-		
+
 		httpSecurity.authorizeRequests().antMatchers(endpoints).permitAll().anyRequest().authenticated();
 		httpSecurity.csrf().disable();
 //		httpSecurity.exceptionHandling().accessDeniedHandler(getAccessDeniedHandler());
@@ -72,4 +71,3 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 }
-

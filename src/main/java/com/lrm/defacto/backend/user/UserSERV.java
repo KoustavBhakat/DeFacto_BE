@@ -3,6 +3,7 @@ package com.lrm.defacto.backend.user;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,12 +36,15 @@ public class UserSERV implements UserDetailsService {
 
 	@Value("${get-all-users}")
 	private String getUserEndpoint;
-	
+
 	@Value("${X-AUTH-USER}")
 	private String userAuth;
-	
+
 	@Value("${X-AUTH-TOKEN}")
 	private String userToken;
+
+	@Autowired
+	private UserREPO userRepo;
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -55,15 +60,15 @@ public class UserSERV implements UserDetailsService {
 //			}
 //			return new User(account.getUserName(), account.getUserName(), roles);
 //		}
-		return null;
+		return new User(username, username, roles);
 
 	}
 
-	public Object login(UserDTO userDto) {
-
-		String jwtToken = this.jwtUtil.generateJWTToken(new JWTRequestBody(userDto.getUsername(), new Date()));
-		return jwtToken;
-	}
+//	public Object login(UserDTO userDto) {
+//
+//		String jwtToken = this.jwtUtil.generateJWTToken(new JWTRequestBody(userDto.getUsername(), new Date()));
+//		return jwtToken;
+//	}
 
 	public Object getAllUsers() throws RestClientException, URISyntaxException {
 
@@ -74,10 +79,14 @@ public class UserSERV implements UserDetailsService {
 
 		HttpEntity<String> finalRequest = new HttpEntity<String>(headers);
 
-		ResponseEntity<ArrayList> response = this.restTemplate.exchange(this.getUserEndpoint, HttpMethod.GET, finalRequest,
-				ArrayList.class);
+		ResponseEntity<ArrayList> response = this.restTemplate.exchange(this.getUserEndpoint, HttpMethod.GET,
+				finalRequest, ArrayList.class);
 
 		return response.getBody();
+	}
+
+	public UserMODL getUserById(String id) {
+		return this.userRepo.findById(id).get();
 	}
 
 }

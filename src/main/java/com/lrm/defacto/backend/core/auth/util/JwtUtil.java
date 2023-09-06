@@ -17,66 +17,69 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Service
 public class JwtUtil {
 
-    @Value("${jwtSecret}")
-    private String jwtSecret;
+	@Value("${jwtSecret}")
+	private String jwtSecret;
 
-    @Value(("S{jwtExpirationMs}"))
-    private String jwtExpirationMs;
+	@Value(("S{jwtExpirationMs}"))
+	private String jwtExpirationMs;
 
-    public String generateJWTToken(JWTRequestBody jwtRequestBody){
-        //check what are principals and roles and implement them
-        return Jwts.builder()
-//        		.setClaims(jwtRequestBody)
-                .setSubject(jwtRequestBody.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime() + (8 * 60 * 60 * 1000)))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .claim("forceLogoutTime",jwtRequestBody.getCurrentDate())
-                .compact();
-    }
-    
-    public String generateJWTTokenForAskForHelp(HashMap<String, Object> jwtRequestBody){
-        //check what are principals and roles and implement them
-        return Jwts.builder()
-        		.setClaims(jwtRequestBody)
-                //.setSubject(jwtRequestBody.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime() + (24 * 60 * 60 * 1000)))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .compact();
-    }
+	@Value("${authorized.email.domains}")
+	private String authorizedEmailDomains;
 
-    //retrieve username from jwt token
-    public String getSubjectFromToken(String token) {
-        return getClaimFromToken(token, Claims::getSubject);
-    }
+	public String generateJWTToken(JWTRequestBody jwtRequestBody) {
+		// check what are principals and roles and implement them
 
-    //retrieve expiration date from jwt token
-    public Date getExpirationDateFromToken(String token) {
-        return getClaimFromToken(token, Claims::getExpiration);
-    }
+		return Jwts.builder()
+//				setClaims(jwtRequestBody)
+				.setSubject(jwtRequestBody.getEmailDomain()).setIssuedAt(new Date())
+				.setExpiration(new Date(new Date().getTime() + (8 * 60 * 60 * 1000)))
+				.signWith(SignatureAlgorithm.HS512, jwtSecret).compact();
+	}
 
-    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = getAllClaimsFromToken(token);
-        return claimsResolver.apply(claims);
-    }
+//	public String generateJWTTokenForAskForHelp(HashMap<String, Object> jwtRequestBody) {
+//		// check what are principals and roles and implement them
+//		return Jwts.builder().setClaims(jwtRequestBody)
+//				// .setSubject(jwtRequestBody.getUsername())
+//				.setIssuedAt(new Date()).setExpiration(new Date(new Date().getTime() + (24 * 60 * 60 * 1000)))
+//				.signWith(SignatureAlgorithm.HS512, jwtSecret).compact();
+//	}
 
-    //for retrieving any information from token we will need the secret key
-    public Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
-    }
+	// retrieve username from jwt token
+	public String getSubjectFromToken(String token) {
+		return getClaimFromToken(token, Claims::getSubject);
+	}
 
-    //check if the token has expired
-    private boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
-    }
+	// retrieve expiration date from jwt token
+	public Date getExpirationDateFromToken(String token) {
+		return getClaimFromToken(token, Claims::getExpiration);
+	}
 
-    //validate token
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = getSubjectFromToken(token);
-        System.err.println(username + "        "+ userDetails == null);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
+	public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+		final Claims claims = getAllClaimsFromToken(token);
+//		String customClaim = (String) claims.get("domain");
+//		claims = null;
+//		claims.put("domain", customClaim);
+		System.out.println("claims =>>>>>" + claims);
+		return claimsResolver.apply(claims);
+	}
+
+	// for retrieving any information from token we will need the secret key
+	public Claims getAllClaimsFromToken(String token) {
+		return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
+	}
+
+	// check if the token has expired
+	private boolean isTokenExpired(String token) {
+		final Date expiration = getExpirationDateFromToken(token);
+		return expiration.before(new Date());
+	}
+
+	// validate token
+	public boolean validateToken(String token, UserDetails userDetails) {
+		final String username = getSubjectFromToken(token);
+		System.err.println(username);
+//        System.err.println(username + "        "+ userDetails == null);
+		return (username.equals(authorizedEmailDomains) && !isTokenExpired(token));
+	}
 
 }

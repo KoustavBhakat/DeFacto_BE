@@ -2,35 +2,49 @@ package com.lrm.defacto.backend.user;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@Table(name = "user_details")
+@EntityListeners(AuditingEntityListener.class)
 public class UserMODL {
 
 	@Id
 	private String id;
 
-	private String firstName;
+	@Column(name = "full_name")
+	private String fullName;
 
-	private String lastName;
-
-	private String fullname;
-
+	@Column(name = "pod_id")
 	private String podId;
 
 	private String email;
 
-	private int bandwidth;
+	@Column(name = "bandwidth", columnDefinition = "Integer default 100")
+	private Integer bandwidth;
 
-	private int totalWorkedHours;
+	@Column(name = "total_worked_hours")
+	private Integer totalWorkedHours;
 
 	private String status;
 
-	private int allocationPercent;
+	@Column(name = "allocation_percent")
+	private Integer allocationPercent;
 
+	@Column(name = "created_at")
+	@CreatedDate
 	private Date createdAt;
 
+	@Column(name = "updated_at")
+	@LastModifiedDate
 	private Date updatedAt;
 
 	public String getId() {
@@ -41,28 +55,12 @@ public class UserMODL {
 		this.id = id;
 	}
 
-	public String getFirstName() {
-		return firstName;
+	public String getFullName() {
+		return fullName;
 	}
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public String getFullname() {
-		return fullname;
-	}
-
-	public void setFullname(String fullname) {
-		this.fullname = fullname;
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 
 	public String getPodId() {
@@ -81,19 +79,19 @@ public class UserMODL {
 		this.email = email;
 	}
 
-	public int getBandwidth() {
+	public Integer getBandwidth() {
 		return bandwidth;
 	}
 
-	public void setBandwidth(int bandwidth) {
+	public void setBandwidth(Integer bandwidth) {
 		this.bandwidth = bandwidth;
 	}
 
-	public int getTotalWorkedHours() {
+	public Integer getTotalWorkedHours() {
 		return totalWorkedHours;
 	}
 
-	public void setTotalWorkedHours(int totalWorkedHours) {
+	public void setTotalWorkedHours(Integer totalWorkedHours) {
 		this.totalWorkedHours = totalWorkedHours;
 	}
 
@@ -105,11 +103,11 @@ public class UserMODL {
 		this.status = status;
 	}
 
-	public int getAllocationPercent() {
+	public Integer getAllocationPercent() {
 		return allocationPercent;
 	}
 
-	public void setAllocationPercent(int allocationPercent) {
+	public void setAllocationPercent(Integer allocationPercent) {
 		this.allocationPercent = allocationPercent;
 	}
 

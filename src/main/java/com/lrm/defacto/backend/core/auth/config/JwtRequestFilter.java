@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +31,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 	@Autowired
 	private UserSERV userServ;
 
+	@Value("${authorized.email.domains}")
+	private String authorizedEmailDomains;
 
 //	@Autowired
 //	private ProductDetailsREPO productDetailsREPO;
@@ -48,14 +51,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 			jwt = authorizationHeader.substring(7);
 			username = jwtUtil.getSubjectFromToken(jwt);
-			Long forceLogoutTimestamp = (Long) jwtUtil.getAllClaimsFromToken(jwt).get("forceLogoutTime");
-//			System.out.println("convertedForceLogoutDate===" + convertedForceLogoutDate);
 
 		}
 
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
 			UserDetails userDetails = this.userServ.loadUserByUsername(username);
+
+			System.out.println(userDetails.getUsername());
 
 //			System.out.println("userDetails ==>  " + userDetails.getAuthorities());
 
