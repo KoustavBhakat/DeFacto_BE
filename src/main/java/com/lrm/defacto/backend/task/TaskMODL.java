@@ -18,6 +18,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.lrm.defacto.backend.task.dto.TaskTimeline;
 import com.lrm.defacto.backend.user.UserMODL;
 
 @Entity
@@ -79,6 +80,28 @@ public class TaskMODL {
 
 	@Transient
 	private List<TaskMODL> subTaskList;
+
+	@Transient
+	private TaskTimeline taskTimeline;
+
+	@Transient
+	private String subTasksCompleted;
+
+	public String getSubTasksCompleted() {
+		return subTasksCompleted;
+	}
+
+	public void setSubTasksCompleted(String subTasksCompleted) {
+		this.subTasksCompleted = subTasksCompleted;
+	}
+
+	public TaskTimeline getTaskTimeline() {
+		return taskTimeline;
+	}
+
+	public void setTaskTimeline(TaskTimeline taskTimeline) {
+		this.taskTimeline = taskTimeline;
+	}
 
 	public List<TaskMODL> getSubTaskList() {
 		return subTaskList;

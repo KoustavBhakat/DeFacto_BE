@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lrm.defacto.backend.task.dto.TaskCreateDTO;
 import com.lrm.defacto.backend.task.dto.TaskDetailsDTO;
 import com.lrm.defacto.backend.task.dto.TaskListApiDTO;
+import com.lrm.defacto.backend.task.dto.TaskUpdateDTO;
 import com.lrm.defacto.backend.task.statusmessages.TaskErrorMessages;
 import com.lrm.defacto.backend.task.statusmessages.TaskErrorStatuses;
 import com.lrm.defacto.backend.task.statusmessages.TaskSuccessMessages;
@@ -82,6 +84,22 @@ public class TaskCTRL<T> {
 			return new ResponseEntity<>(new Response<>(TaskSuccessStatuses.SUCCESS_TASK_ADD,
 					TaskSuccessMessages.SUCCESS_TASK_ADD, taskCount), HttpStatus.OK);
 		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>(
+					new Response<>(TaskErrorStatuses.ERROR_ADD_TASK, TaskErrorMessages.ERROR_ADD_TASK, hm),
+					HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@PutMapping("/update")
+	public ResponseEntity<?> updateTask(@RequestBody TaskUpdateDTO taskUpdateDto) {
+		try {
+			System.out.println(hm.hashCode());
+			TaskMODL updatedTask = this.taskServ.updateTaskDeatils(taskUpdateDto);
+			return new ResponseEntity<>(new Response<>(TaskSuccessStatuses.SUCCESS_TASK_ADD,
+					TaskSuccessMessages.SUCCESS_TASK_ADD, updatedTask), HttpStatus.OK);
+		} catch (Exception e) {
+			e.printStackTrace();
 			return new ResponseEntity<>(
 					new Response<>(TaskErrorStatuses.ERROR_ADD_TASK, TaskErrorMessages.ERROR_ADD_TASK, hm),
 					HttpStatus.BAD_REQUEST);

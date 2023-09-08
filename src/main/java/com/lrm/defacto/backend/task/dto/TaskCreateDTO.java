@@ -10,6 +10,8 @@ public class TaskCreateDTO {
 
 	private String parentId;
 
+	private String taskCreationDate;
+
 	private Date taskDueDate;
 
 	private String assignedBy;
@@ -23,6 +25,26 @@ public class TaskCreateDTO {
 	private Integer expectedHours;
 
 	private String status;
+
+	private String utilizedHours;
+
+	private String completionPercentage;
+
+	public String getCompletionPercentage() {
+		return completionPercentage;
+	}
+
+	public void setCompletionPercentage(String completionPercentage) {
+		this.completionPercentage = completionPercentage;
+	}
+
+	public String getUtilizedHours() {
+		return utilizedHours;
+	}
+
+	public void setUtilizedHours(String utilizedHours) {
+		this.utilizedHours = utilizedHours;
+	}
 
 	public String getName() {
 		return name;
@@ -102,6 +124,14 @@ public class TaskCreateDTO {
 
 	public void setParentId(String parentId) {
 		this.parentId = parentId;
+	}
+
+	public String getTaskCreationDate() {
+		return taskCreationDate;
+	}
+
+	public void setTaskCreationDate(String taskCreationDate) {
+		this.taskCreationDate = taskCreationDate;
 	}
 
 }

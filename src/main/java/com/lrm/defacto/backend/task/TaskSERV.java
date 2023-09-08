@@ -1,5 +1,7 @@
 package com.lrm.defacto.backend.task;
 
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,8 @@ import com.lrm.defacto.backend.task.dto.TaskCreateDTO;
 import com.lrm.defacto.backend.task.dto.TaskDetailsDTO;
 import com.lrm.defacto.backend.task.dto.TaskListApiDTO;
 import com.lrm.defacto.backend.task.dto.TaskListType;
+import com.lrm.defacto.backend.task.dto.TaskTimeline;
+import com.lrm.defacto.backend.task.dto.TaskUpdateDTO;
 import com.lrm.defacto.backend.user.UserMODL;
 import com.lrm.defacto.backend.user.UserSERV;
 
@@ -47,7 +51,7 @@ public class TaskSERV {
 		if (taskCreateDto.getName() == null) {
 			throw new Exception("Invalid name");
 		}
-		if (taskCreateDto.getTaskDueDate() == null) {
+		if (taskCreateDto.getParentId() == null && taskCreateDto.getTaskDueDate() == null) {
 			throw new Exception("Invalid end date");
 		}
 
@@ -71,17 +75,30 @@ public class TaskSERV {
 
 		taskModl.setName(taskCreateDto.getName());
 		taskModl.setDescription(taskCreateDto.getDescription());
-		taskModl.setProjectId(project != null ? project.getParentTitle() : taskCreateDto.getProjectId());
+		taskModl.setProjectId(project != null ? project.getName() : taskCreateDto.getProjectId());
 		taskModl.setPriority(priority != null ? priority.getLabel() : taskCreateDto.getPriority());
 		taskModl.setAssignedBy(assignedBy != null ? assignedBy : null);
 		taskModl.setAssignedTo(assignedTo != null ? assignedTo : null);
-		taskModl.setTaskDueDate(taskCreateDto.getTaskDueDate());
+
+		if (taskCreateDto.getParentId() != null) {
+			TaskMODL parentTask = this.taskRepo.findById(taskCreateDto.getParentId()).get();
+			if (parentTask != null) {
+				taskModl.setTaskDueDate(parentTask.getTaskDueDate());
+			}
+		} else {
+			taskModl.setTaskDueDate(taskCreateDto.getTaskDueDate());
+		}
+
 		taskModl.setExpectedHours(taskCreateDto.getExpectedHours());
 
 		StatusMODL status = this.statusServ.getStatusByCode(TaskListType.NEW.name());
 		taskModl.setIsSplitted(false);
 		taskModl.setStatus(status.getName());
 		taskModl.setTaskCreationDate(new Date());
+
+		if (taskCreateDto.getParentId() != null) {
+			taskModl.setIsSplitted(true);
+		}
 
 		TaskMODL savedTask = this.taskRepo.save(taskModl);
 		taskModl = null;
@@ -107,6 +124,12 @@ public class TaskSERV {
 
 		Page<TaskMODL> taskList = null;
 
+		UserMODL currentUser = null;
+
+		if (taskListApiDto.getUserId() != null) {
+			currentUser = this.userServ.getUserById(taskListApiDto.getUserId());
+		}
+
 		if (taskListApiDto.getTaskListType() != null) {
 
 			if (taskListApiDto.getTaskListType().equalsIgnoreCase(TaskListType.NEW.name())) {
@@ -114,11 +137,10 @@ public class TaskSERV {
 				StatusMODL status = this.statusServ.getStatusByCode(TaskListType.NEW.name());
 
 				if (taskListApiDto.getQuery() == null) {
-					taskList = this.taskRepo.findAllByAssignedToAndStatus(taskListApiDto.getUserId(), status.getId(),
-							pageable);
+					taskList = this.taskRepo.findAllByAssignedToAndStatus(currentUser, status.getName(), pageable);
 				} else {
-					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(),
-							taskListApiDto.getUserId(), status.getId(), pageable);
+					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(), currentUser,
+							status.getName(), pageable);
 				}
 
 			} else if (taskListApiDto.getTaskListType().equalsIgnoreCase(TaskListType.IN_PROGRESS.name())) {
@@ -126,11 +148,11 @@ public class TaskSERV {
 				StatusMODL status = this.statusServ.getStatusByCode(TaskListType.IN_PROGRESS.name().replace('_', ' '));
 
 				if (taskListApiDto.getQuery() == null) {
-					taskList = this.taskRepo.findAllByAssignedToAndStatus(taskListApiDto.getUserId(), status.getId(),
-							pageable);
+					taskList = this.taskRepo.findAllByAssignedToAndStatus(currentUser,
+							status.getName().replace('_', ' '), pageable);
 				} else {
-					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(),
-							taskListApiDto.getUserId(), status.getId(), pageable);
+					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(), currentUser,
+							status.getName(), pageable);
 				}
 
 			} else if (taskListApiDto.getTaskListType().equalsIgnoreCase(TaskListType.COMPLETE.name())) {
@@ -138,26 +160,49 @@ public class TaskSERV {
 				StatusMODL status = this.statusServ.getStatusByCode(TaskListType.COMPLETE.name());
 
 				if (taskListApiDto.getQuery() == null) {
-					taskList = this.taskRepo.findAllByAssignedToAndStatus(taskListApiDto.getUserId(), status.getId(),
-							pageable);
+					taskList = this.taskRepo.findAllByAssignedToAndStatus(currentUser, status.getName(), pageable);
 				} else {
-					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(),
-							taskListApiDto.getUserId(), status.getId(), pageable);
+					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(), currentUser,
+							status.getName(), pageable);
 				}
 
 			} else if (taskListApiDto.getTaskListType().equalsIgnoreCase(TaskListType.ASSIGNED_BY_ME.name())) {
 
-				StatusMODL status = this.statusServ
-						.getStatusByCode(TaskListType.ASSIGNED_BY_ME.name().replace('_', ' '));
+//				StatusMODL status = this.statusServ
+//						.getStatusByCode(TaskListType.ASSIGNED_BY_ME.name().replace('_', ' '));
 
 				if (taskListApiDto.getQuery() == null) {
-					taskList = this.taskRepo.findAllByAssignedToAndStatus(taskListApiDto.getUserId(), status.getId(),
-							pageable);
+					taskList = this.taskRepo.findAllByAssignedBy(currentUser, pageable);
 				} else {
-					taskList = this.taskRepo.findAllByNameAndAssignedToAndStatus(taskListApiDto.getQuery(),
-							taskListApiDto.getUserId(), status.getId(), pageable);
+					taskList = this.taskRepo.findAllByNameAndAssignedBy(taskListApiDto.getQuery(), currentUser,
+							pageable);
 				}
 			}
+		}
+
+		Date currentDate = new Date();
+		Integer daysLeft = null;
+		TaskTimeline taskTimeline = new TaskTimeline();
+		if (taskList.hasContent()) {
+
+			for (TaskMODL task : taskList.getContent()) {
+
+				daysLeft = Period
+						.between(task.getTaskDueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+								currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
+						.getDays();
+//				System.out.println(daysLeft);
+				taskTimeline.setDaysLeft(String.valueOf(daysLeft));
+
+				if (currentDate.after(task.getTaskDueDate())) {
+					taskTimeline.setIsValid(false);
+				} else {
+					taskTimeline.setIsValid(true);
+				}
+
+				task.setTaskTimeline(taskTimeline);
+			}
+
 		}
 
 		return taskList;
@@ -183,11 +228,18 @@ public class TaskSERV {
 
 			Integer totalUtilizedHours = 0;
 
+			int completedTaskCount = 0;
+
 			for (TaskMODL subTask : subTasks) {
 				totalUtilizedHours += subTask.getUtilizedHours();
+
+				if (subTask.getStatus().equalsIgnoreCase(TaskListType.COMPLETE.name())) {
+					completedTaskCount += 1;
+				}
 			}
 
 			retrievedTask.setUtilizedHours(totalUtilizedHours);
+			retrievedTask.setSubTasksCompleted(String.valueOf(completedTaskCount));
 		}
 
 		retrievedTask.setSubTaskList(subTasks);
@@ -201,22 +253,52 @@ public class TaskSERV {
 			throw new Exception("Invalid user id");
 		}
 
-		Integer newCount = this.taskRepo.countByAssignedToAndStatus(taskListApiDto.getUserId(),
-				TaskListType.NEW.name());
-		Integer inProgressCount = this.taskRepo.countByAssignedToAndStatus(taskListApiDto.getUserId(),
+		UserMODL currentUser = this.userServ.getUserById(taskListApiDto.getUserId());
+
+		Integer newCount = this.taskRepo.countByAssignedToAndStatus(currentUser, TaskListType.NEW.name());
+		Integer inProgressCount = this.taskRepo.countByAssignedToAndStatus(currentUser,
 				TaskListType.IN_PROGRESS.name().replace('_', ' '));
-		Integer completedCount = this.taskRepo.countByAssignedToAndStatus(taskListApiDto.getUserId(),
-				TaskListType.COMPLETE.name());
-		Integer assignedByMeCount = this.taskRepo.countByAssignedBy(taskListApiDto.getUserId());
+		Integer completedCount = this.taskRepo.countByAssignedToAndStatus(currentUser, TaskListType.COMPLETE.name());
+		Integer assignedByMeCount = this.taskRepo.countByAssignedBy(currentUser);
 
 		return new HashMap<String, Integer>() {
 			{
 				put("New", newCount);
-				put("In Progress", inProgressCount);
+				put("In_Progress", inProgressCount);
 				put("Complete", completedCount);
-				put("Assigned By Me", assignedByMeCount);
+				put("Assigned_By_Me", assignedByMeCount);
 			}
 		};
+	}
+
+	public TaskMODL updateTaskDeatils(TaskUpdateDTO taskUpdateDto) throws Exception {
+
+		if (taskUpdateDto.getTaskId() == null) {
+			throw new Exception("Invalid task id");
+		}
+
+		Optional<TaskMODL> task = this.taskRepo.findById(taskUpdateDto.getTaskId());
+
+		if (task.isEmpty()) {
+			throw new Exception("Task not found");
+		}
+
+		TaskMODL updatedTask = task.get();
+
+		if (taskUpdateDto.getStatus() != null) {
+			updatedTask.setStatus(taskUpdateDto.getStatus());
+
+		}
+
+		if (taskUpdateDto.getUtilizedHours() != null) {
+			updatedTask.setUtilizedHours(Integer.valueOf(taskUpdateDto.getUtilizedHours()));
+		}
+
+		if (taskUpdateDto.getPercentCompletion() != null) {
+			updatedTask.setCompletionPercentage(taskUpdateDto.getPercentCompletion());
+		}
+
+		return this.taskRepo.save(updatedTask);
 	}
 
 }

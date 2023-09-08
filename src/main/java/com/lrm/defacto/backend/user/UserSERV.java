@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.lrm.defacto.backend.core.auth.dto.JWTRequestBody;
 import com.lrm.defacto.backend.core.auth.util.JwtUtil;
+import com.lrm.defacto.backend.task.dto.TaskListApiDTO;
 import com.lrm.defacto.backend.user.dto.UserDTO;
 
 @Service
@@ -87,6 +88,14 @@ public class UserSERV implements UserDetailsService {
 
 	public UserMODL getUserById(String id) {
 		return this.userRepo.findById(id).get();
+	}
+
+	public Object getUserProfile(TaskListApiDTO taskListApiDto) {
+
+		
+		
+		
+		return null;
 	}
 
 }
